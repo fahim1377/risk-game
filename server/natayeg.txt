@@ -1,0 +1,5 @@
+MY MINIMAX VS A*
+12 	      1
+
+
+hamon yeki ke a* bord ham to 68 turn!

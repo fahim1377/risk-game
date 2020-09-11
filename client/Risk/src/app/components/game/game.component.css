@@ -1,0 +1,33 @@
+.controls{
+  margin-top:3%;
+  text-align: center;
+  position: relative;
+}
+.usa{
+  margin-left: 20%;
+  margin-top:2%
+}
+.egypt{
+  margin-top:200px;
+}
+.stats{
+  width: 280px;
+  position: fixed;
+  margin-top: -60px;
+
+}
+.game-stats{
+  width:300px;
+  /* position: fixed; */
+  float: right;
+  margin-right: 20px;
+}
+.stats-2{
+  width: 280px;
+  float: right;
+  margin-right: 20px;
+  margin-left: -100px;
+  margin-bottom: -100px;
+  position:static;
+  margin-top: -60px;
+}

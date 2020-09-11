@@ -1,0 +1,131 @@
+<div class="controls">
+    <div *ngIf="!gameStarted">
+        <h4>Risk</h4>
+        <div style="margin:10px; display:inline-grid;">
+            <label style="display:block; text-align:center;" for="map">Map</label>
+            <p-selectButton id="map" [options]="maps" [(ngModel)]="map"></p-selectButton>
+        </div>
+        <div style="margin:10px; margin-top:15px; display:inline-grid;">
+            <label style="margin-left:12%; display:flex" for="numberDD">Players</label>
+            <p-dropdown id="numberDD" [options]="numberOptions" [(ngModel)]="playersNum"></p-dropdown>
+        </div>
+        <div style="margin:10px; display:inline-grid;">
+            <label style="display:block; text-align:center;" for="modeDD">Game Mode</label>
+            <p-dropdown (onChange)="onModeChange()" id="modeDD" [options]="gameModes" [(ngModel)]="gameMode"></p-dropdown>
+        </div>
+        <div style="margin:10px; margin-top:15px; display:inline-grid;">
+            <label style="display:block; text-align:center; color:transparent;" for="startB">~</label>
+            <button id="startB" (click)="startGame()" pButton type="button" label="Start" class="ui-button-success"></button>
+        </div>
+        <div style="margin:10px; margin-top:15px; display:inline-grid;">
+            <label style="display:block; text-align:center; color:transparent;" for="startB">~</label>
+            <button id="joinB" (click)="displayJoin=true" tooltipPosition="top" pTooltip="Join an existing game" pButton type="button" label="Join" class="ui-button-primary"></button>
+        </div>
+        <br>
+    </div>
+    <div *ngIf="gameStarted">
+      <div>
+        <button id="resetB" (click)="resetGame()" pButton type="button" label="Reset" class="ui-button-success"></button>
+        <button style="margin-left:20px;" id="idB" (click)="displayID=true" pButton type="button" label="Invite" class="ui-button-primary"></button>
+      </div>
+        <div class="stats" *ngIf="gameStarted">
+          <div *ngIf="gameStarted && currentPlayer" class="card text-white bg-secondary mb-3" style="max-width: 18rem; margin-left:20px;">
+            <div class="card-header">Player Stats</div>
+            <div class="card-body">
+              <h5 class="card-title">Player {{currentPlayer.id}}'s Turn</h5>
+              <h5 *ngIf="attackingTerritory" class="card-title">You're attacking with</h5>
+              <p *ngIf="attackingTerritory" class="card-text">{{attackingTerritory.name}}: {{attackingTerritory.troops.length}} troops</p>
+              <h5 *ngIf="attackeeTerritory" class="card-title">Attacking <span *ngIf="attackeeTerritory.occupying_player!=null">Player {{attackeeTerritory.occupying_player}}'s</span></h5>
+              <p *ngIf="attackeeTerritory" class="card-text">{{attackeeTerritory.name}}<span *ngIf="attackeeTerritory.troops">: {{attackeeTerritory.troops.length}} troops</span></p>
+            </div>
+          </div>
+          <div *ngIf="attackeeTerritory&&attackingTerritory" style="margin-bottom:20px;">
+            Attack with
+          <p-spinner  id="spin" size="5" [(ngModel)]="attackingTroopsNum" [min]="1" [max]="attackingTerritory.troops.length-1"></p-spinner>
+            troops
+        </div>
+        <div *ngIf="gameMode!=2">
+          <button *ngIf="attackeeTerritory&&attackingTerritory" style="margin-right:10px;" (click)="onAttack()"  type="button"  class="btn btn-danger">Attack!</button>
+          <button *ngIf="currentPlayer&&currentPlayer.type==0" (click)="onPass()"  type="button" class="btn btn-success">End Turn</button>
+          <button *ngIf="currentPlayer&&currentPlayer.type!=0" (click)="onPass()"  type="button" class="btn btn-success">Next Turn</button>
+        </div>
+        <div *ngIf="gameMode==2">
+          <button *ngIf="!simulationStarted" style="margin-right:10px;" (click)="startSimulation()"  type="button"  class="btn btn-danger">Simulate</button>
+          <button  *ngIf="simulationStarted" (click)="onPause()"  type="button" class="btn btn-success">Pause</button>
+          <button *ngIf="!simulationStarted" (click)="onNextTrun()"  type="button" class="btn btn-success">Next Turn</button>
+            <div style="margin-left:20px">
+              <p-progressSpinner *ngIf="runningAI" [style]="{'margin-top':'100px',width: '50px', height: '50px'}" strokeWidth="8"  animationDuration=".5s"></p-progressSpinner>
+            </div>
+          </div>
+        </div>
+        <div class="stats-2" *ngIf="gameStarted&&currentTerritoryHover">
+          <div *ngIf="gameStarted && currentPlayer" class="card text-white bg-dark mb-3" style="max-width: 18rem; margin-left:20px;">
+            <div class="card-header" [ngStyle]="{'background':getColor(currentTerritoryHover)}">{{currentTerritoryHover.name}}</div>
+            <div class="card-body"  [ngStyle]="{'background':getColor(currentTerritoryHover)}">
+              <h5 *ngIf="currentTerritoryHover.occupying_player!=null" class="card-title">Occupied by Player {{currentTerritoryHover.occupying_player}}</h5>
+              <p *ngIf="currentTerritoryHover.troops" class="card-text">{{currentTerritoryHover.troops.length}} Troops</p>
+              </div>
+          </div>
+        </div>
+    </div>
+  <div *ngIf="!gameStarted&&gameMode&&gameMode==1">
+    Choose AI Mode
+    <ng-container *ngFor="let i of range(playersNum-1)">
+      <p-dropdown [style]="{'margin-left':'5px'}"[options]="playerTypes" [(ngModel)]="selectedPlayerTypes[i]"></p-dropdown>
+    </ng-container>
+    </div>
+    <div *ngIf="!gameStarted&&gameMode&&gameMode==2">
+      Choose AI Mode
+      <ng-container *ngFor="let i of range(playersNum)">
+        <p-dropdown [style]="{'margin-left':'5px'}" [options]="playerTypes" [(ngModel)]="selectedPlayerTypes[i]"></p-dropdown>
+      </ng-container>
+      </div>
+    <div class="usa" *ngIf="map=='USA'">
+        <app-usa-map [allTerritories]="game.territories" [adjacent_territories]="currentAdjacents" (attackingTerritoryChange)="onAttacking($event)" (attackeeTerritoryChange)="onAttackee($event)" (currentTerritoryChange)="onTerritoryChange($event)" [attackerTerritories]="attackerTerritories" [attackableTerritories]="attackableTerritories"></app-usa-map>
+    </div>
+    <div class="egypt" *ngIf="map=='Egypt'">
+        <app-egypt-map [allTerritories]="game.territories" [adjacent_territories]="currentAdjacents" (attackingTerritoryChange)="onAttacking($event)" (attackeeTerritoryChange)="onAttackee($event)" (currentTerritoryChange)="onTerritoryChange($event)" [attackerTerritories]="attackerTerritories" [attackableTerritories]="attackableTerritories"></app-egypt-map>
+    </div>
+</div>
+<p-confirmDialog></p-confirmDialog>
+<p-toast [baseZIndex]="10000000" [style]="{marginTop: '-10px'}"></p-toast>
+
+<p-dialog header="Enter Game ID" [(visible)]="displayJoin">
+  <input style="margin-top:10px;" id="input" id="input" type="text" size="30" pInputText [(ngModel)]="joinID">
+  <button style="margin-top:10px; margin-left:5px;" id="input" type="button" (click)="joinGame()" pButton label="Join"></button>
+</p-dialog>
+
+<p-dialog header="Share" [(visible)]="displayID">
+  <span >Share this with your friends!</span>
+  <br>
+  <input style="margin-top:10px;" id="input" type="text" size="38" pInputText [(ngModel)]="gameID" [disabled]="disabled"/>
+</p-dialog>
+
+<p-dialog *ngIf="currentPlayer" [contentStyle]="{'background':'rgba(255,255,255,0.7)','overflow':'visible'}" [modal]="true" [closable]="false" width="325"  header="Player {{currentPlayer.id}} assign your new troops!" [(visible)]="displayTroops">
+  <div style="margin-left:20px;margin-top:1px;">
+  <span style="text-align:center;font-size:15px;font-weight:bold;margin-bottom:10px;">{{newTroopsNum}} troops left!</span>
+  <div style="margin-top:10px;">
+  <p-dropdown [resetFilterOnHide]="true" [autoDisplayFirst]="false" [filter]="true" [baseZIndex]="100000" [options]="assignableTerritories" [(ngModel)]="selectedTerritory"></p-dropdown>
+  <p-spinner [style]="{'margin-left':'5px'}" [min]="1" [max]="newTroopsNum" size="8" [(ngModel)]="troopsToTerritory"></p-spinner>
+  </div>
+  <br>
+  <button style="margin-left:30%" type="button" (click)="assignTroops()" pButton label="Assign"></button>
+  </div>
+</p-dialog>
+
+<p-dialog header="Game Over" [contentStyle]="{'background':'rgba(255,255,255,0.9)'}" [(visible)]="gameOver">
+  <div style="text-align:center;">
+  <h6 style="margin-top:10px;">Player {{winner}} has conqured {{map}}!</h6>
+  <span style="margin-bottom:10px;margin-top:10px;"> In {{turns}} truns </span>
+  <br><br>
+  <button (click)="onNewGame()" pButton type="button" label="New" class="ui-button-success"></button>
+  <button  style="margin-left:20px;"(click)="onExit()" pButton type="button" label="Reset" class="ui-button-danger"></button>
+</div>
+</p-dialog>
+
+<p-blockUI [blocked]="blocked">
+  <div style = "text-align:center; margin-top:100px;">
+  <h2 style="color:white">AI Thinking...</h2>
+  <p-progressSpinner [style]="{'margin-top':'100px',width: '50px', height: '50px'}" strokeWidth="8"  animationDuration=".5s"></p-progressSpinner>
+</div>
+</p-blockUI>
